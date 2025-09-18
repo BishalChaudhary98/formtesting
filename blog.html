@@ -351,6 +351,74 @@ Here's the fixed version with all the issues resolved:
         .contact-item a:hover {
             color: #667eea;
         }
+        /* FIXED: Force long words to break and wrap */
+.modal-content-text {
+    font-size: 1.1rem !important;
+    line-height: 1.8 !important;
+    color: #374151 !important;
+    margin-bottom: 3rem !important;
+    text-align: left !important;
+    
+    /* THESE ARE THE KEY FIXES FOR WORD WRAPPING */
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    white-space: pre-wrap !important;
+}
+
+.modal-content-text p {
+    margin-bottom: 1.2rem !important;
+    line-height: 1.7 !important;
+    text-align: left !important;
+    
+    /* FORCE LONG WORDS TO BREAK */
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+}
+
+/* Also fix the modal content container */
+.modal-content {
+    background-color: white;
+    margin: 2% auto;
+    padding: 0;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+    
+    /* PREVENT MODAL FROM EXPANDING */
+    overflow-x: hidden !important;
+    word-wrap: break-word !important;
+}
+
+.modal-body {
+    padding: 2rem;
+    
+    /* PREVENT CONTENT FROM EXPANDING MODAL */
+    overflow-x: hidden !important;
+    word-wrap: break-word !important;
+}
+
+/* Fix for very long words in titles too */
+.modal-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+    
+    /* BREAK LONG TITLES TOO */
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+}
 
         /* Responsive */
         @media (max-width: 768px) {
