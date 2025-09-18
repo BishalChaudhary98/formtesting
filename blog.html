@@ -94,6 +94,7 @@
             justify-content: center;
             color: #64748b;
             overflow: hidden;
+            position: relative;
         }
 
         .blog-image img {
@@ -139,23 +140,16 @@
             color: #5a67d8;
         }
 
-        /* Delete Button */
-        .delete-btn {
+        /* Image count badge */
+        .image-count {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #e74c3c;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
             color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            display: none;
-        }
-
-        .blog-card:hover .delete-btn {
-            display: block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
         }
 
         /* Empty State */
@@ -221,76 +215,88 @@
                 return saved ? JSON.parse(saved) : [];
             }
 
-            // Save posts to localStorage
-            savePosts() {
-                localStorage.setItem('blogPosts', JSON.stringify(this.posts));
-            }
-
-            // Delete a post
-            deletePost(id) {
-                if (confirm('Delete this post?')) {
-                    this.posts = this.posts.filter(post => post.id !== id);
-                    this.savePosts();
-                    this.render();
+            // Render all posts (FIXED - now inside the class)
+            render() {
+                const grid = document.getElementById('blogGrid');
+                
+                if (this.posts.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No posts yet</h3>
+                            <p>Click "Add New Post" to create your first blog post!</p>
+                        </div>
+                    `;
+                    return;
                 }
+
+                grid.innerHTML = this.posts.map(post => {
+                    // Handle multiple images
+                    let imageDisplay;
+                    if (post.images && post.images.length > 1) {
+                        imageDisplay = `
+                            <img src="${post.images[0]}" alt="${post.title}">
+                            <div class="image-count">📸 ${post.images.length}</div>
+                        `;
+                    } else {
+                        imageDisplay = post.image ? 
+                            `<img src="${post.image}" alt="${post.title}">` : 
+                            `<span>📝 ${post.title}</span>`;
+                    }
+
+                    return `
+                        <div class="blog-card">
+                            <div class="blog-image">
+                                ${imageDisplay}
+                            </div>
+                            <div class="blog-content">
+                                <div class="blog-date">${post.date}</div>
+                                <h3 class="blog-title">${post.title}</h3>
+                                <p class="blog-excerpt">${post.excerpt}</p>
+                                <a href="#" class="read-more" onclick="showFullPost(${post.id})">Read More →</a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
 
-           // Update the render method in blog.html
-render() {
-    const grid = document.getElementById('blogGrid');
-    
-    if (this.posts.length === 0) {
-        grid.innerHTML = `
-            <div class="empty-state">
-                <h3>No posts yet</h3>
-                <p>Click "Add New Post" to create your first blog post!</p>
-            </div>
-        `;
-        return;
-    }
-
-    grid.innerHTML = this.posts.map(post => {
-        // Handle multiple images
-        let imageDisplay;
-        if (post.images && post.images.length > 1) {
-            imageDisplay = `
-                <img src="${post.images[0]}" alt="${post.title}">
-                <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">
-                    📸 ${post.images.length}
-                </div>
-            `;
-        } else {
-            imageDisplay = post.image ? 
-                `<img src="${post.image}" alt="${post.title}">` : 
-                `<span>📝 ${post.title}</span>`;
+            // Refresh posts (for real-time updates)
+            refresh() {
+                this.posts = this.loadPosts();
+                this.render();
+            }
         }
 
-        return `
-            <div class="blog-card" style="position: relative;">
-                <button class="delete-btn" onclick="blog.deletePost(${post.id})">&times;</button>
-                <div class="blog-image" style="position: relative;">
-                    ${imageDisplay}
-                </div>
-                <div class="blog-content">
-                    <div class="blog-date">${post.date}</div>
-                    <h3 class="blog-title">${post.title}</h3>
-                    <p class="blog-excerpt">${post.excerpt}</p>
-                    <a href="#" class="read-more">Read More →</a>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+        // Show full post function (you can expand this later)
+        function showFullPost(postId) {
+            const posts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+            const post = posts.find(p => p.id === postId);
+            
+            if (post) {
+                // For now, just show an alert with the content
+                // Later you can create a modal or separate page
+                alert(`${post.title}\n\n${post.content}`);
+            }
+        }
+
         // Initialize blog
         const blog = new SimpleBlog();
 
-        // Refresh when new posts are added
+        // Refresh when new posts are added (for real-time updates)
         window.addEventListener('storage', function(e) {
             if (e.key === 'blogPosts') {
-                blog.posts = blog.loadPosts();
-                blog.render();
+                blog.refresh();
             }
         });
+
+        // Also refresh when page gets focus (when returning from add-post page)
+        window.addEventListener('focus', function() {
+            blog.refresh();
+        });
+
+        // Refresh every 5 seconds to catch new posts
+        setInterval(() => {
+            blog.refresh();
+        }, 5000);
     </script>
 </body>
 </html>
