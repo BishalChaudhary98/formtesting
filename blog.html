@@ -1,3 +1,6 @@
+Here's the fixed version with all the issues resolved:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,7 +54,6 @@
             z-index: 1000;
         }
 
-        ```html
         .add-post-btn:hover {
             background: #5a67d8;
             transform: translateY(-2px);
@@ -285,11 +287,22 @@
             margin-bottom: 2rem;
         }
 
+        /* Better paragraph formatting in modal */
         .modal-content-text {
             font-size: 1.1rem;
             line-height: 1.8;
             color: #374151;
             margin-bottom: 3rem;
+            text-align: left;
+        }
+
+        .modal-content-text p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .modal-content-text p:last-child {
+            margin-bottom: 0;
         }
 
         .contact-section {
@@ -338,25 +351,6 @@
         .contact-item a:hover {
             color: #667eea;
         }
-
-        /* Better paragraph formatting in modal */
-.modal-content-text p {
-    margin-bottom: 1.5rem;
-    text-align: justify;
-}
-
-.modal-content-text p:last-child {
-    margin-bottom: 0;
-}
-
-/* Better line height for readability */
-.modal-content-text {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    color: #374151;
-    margin-bottom: 3rem;
-    text-align: left;
-}
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -454,6 +448,9 @@
     </div>
 
     <script>
+        // Store current post data for gallery navigation
+        let currentPost = null;
+
         // Simple blog system
         class SimpleBlog {
             constructor() {
@@ -496,7 +493,7 @@
                     }
 
                     return `
-                        <div class="blog-card">
+                        <div class="blog-card" onclick="showFullPost(${post.id})">
                             <div class="blog-image">
                                 ${imageDisplay}
                             </div>
@@ -504,7 +501,7 @@
                                 <div class="blog-date">${post.date}</div>
                                 <h3 class="blog-title">${post.title}</h3>
                                 <p class="blog-excerpt">${post.excerpt}</p>
-                                <a href="#" class="read-more" onclick="showFullPost(${post.id})">Read More →</a>
+                                <span class="read-more">Read More →</span>
                             </div>
                         </div>
                     `;
@@ -518,78 +515,90 @@
             }
         }
 
-        // Show full post in modal
         // Show full post in modal (FIXED VERSION)
-function showFullPost(postId) {
-    const posts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
-    const post = posts.find(p => p.id === postId);
-    
-    if (!post) return;
+        function showFullPost(postId) {
+            const posts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+            const post = posts.find(p => p.id === postId);
+            
+            if (!post) return;
 
-    // Set modal content
-    document.getElementById('modalTitle').textContent = post.title;
-    document.getElementById('modalDate').textContent = post.date;
-    
-    // FIXED: Better content formatting
-    let formattedContent = post.content;
-    
-    // Convert double line breaks to paragraphs
-    formattedContent = formattedContent
-        .split('\n\n')  // Split on double line breaks
-        .map(paragraph => paragraph.trim())  // Remove extra whitespace
-        .filter(paragraph => paragraph.length > 0)  // Remove empty paragraphs
-        .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)  // Wrap in <p> tags and convert single breaks to <br>
-        .join('');  // Join all paragraphs
-    
-    // If no double line breaks found, treat each single line break as a paragraph
-    if (!post.content.includes('\n\n')) {
-        formattedContent = post.content
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0)
-            .map(line => `<p>${line}</p>`)
-            .join('');
-    }
-    
-    document.getElementById('modalContent').innerHTML = formattedContent;
+            // Store current post for gallery navigation
+            currentPost = post;
 
-    // Handle images (rest remains the same)
-    const modalImages = document.getElementById('modalImages');
-    if (post.images && post.images.length > 0) {
-        if (post.images.length === 1) {
-            // Single image - full width
-            modalImages.innerHTML = `<img src="${post.images[0]}" alt="${post.title}">`;
-        } else {
-            // Multiple images - grid layout
-            modalImages.innerHTML = `
-                <div class="modal-images-grid">
-                    ${post.images.map(img => `<img src="${img}" alt="${post.title}" onclick="showLargeImage('${img}')">`).join('')}
-                </div>
-            `;
+            // Set modal content
+            document.getElementById('modalTitle').textContent = post.title;
+                        document.getElementById('modalDate').textContent = post.date;
+            
+            // FIXED: Better content formatting with proper paragraph breaks
+            let formattedContent = post.content;
+            
+            // First, normalize line endings
+            formattedContent = formattedContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            
+            // Split content into paragraphs based on double line breaks
+            let paragraphs = formattedContent.split(/\n\s*\n/);
+            
+            // If no double line breaks found, split on single line breaks
+            if (paragraphs.length === 1) {
+                paragraphs = formattedContent.split('\n');
+            }
+            
+            // Format each paragraph
+            formattedContent = paragraphs
+                .map(paragraph => paragraph.trim())
+                .filter(paragraph => paragraph.length > 0)
+                .map(paragraph => {
+                    // Handle single line breaks within paragraphs as <br>
+                    const formattedParagraph = paragraph.replace(/\n/g, '<br>');
+                    return `<p>${formattedParagraph}</p>`;
+                })
+                .join('');
+            
+            document.getElementById('modalContent').innerHTML = formattedContent;
+
+            // Handle images
+            showImageGallery();
+
+            // Show modal
+            document.getElementById('postModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
-    } else if (post.image) {
-        // Fallback single image
-        modalImages.innerHTML = `<img src="${post.image}" alt="${post.title}">`;
-    } else {
-        // No images
-        modalImages.innerHTML = `
-            <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
-                📝 ${post.title}
-            </div>
-        `;
-    }
 
-    // Show modal
-    document.getElementById('postModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
+        // Show image gallery (separated for reuse)
+        function showImageGallery() {
+            const modalImages = document.getElementById('modalImages');
+            
+            if (currentPost.images && currentPost.images.length > 0) {
+                if (currentPost.images.length === 1) {
+                    // Single image - full width
+                    modalImages.innerHTML = `<img src="${currentPost.images[0]}" alt="${currentPost.title}">`;
+                } else {
+                    // Multiple images - grid layout
+                    modalImages.innerHTML = `
+                        <div class="modal-images-grid">
+                            ${currentPost.images.map(img => `<img src="${img}" alt="${currentPost.title}" onclick="showLargeImage('${img}')">`).join('')}
+                        </div>
+                    `;
+                }
+            } else if (currentPost.image) {
+                // Fallback single image
+                modalImages.innerHTML = `<img src="${currentPost.image}" alt="${currentPost.title}">`;
+            } else {
+                // No images
+                modalImages.innerHTML = `
+                    <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                        📝 ${currentPost.title}
+                    </div>
+                `;
+            }
+        }
 
-        // Show large image (for multiple images)
+        // Show large image (FIXED - now goes back to gallery, not blog)
         function showLargeImage(imageSrc) {
             const modalImages = document.getElementById('modalImages');
             modalImages.innerHTML = `
                 <img src="${imageSrc}" alt="Large view">
-                                <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;" onclick="location.reload()">
+                <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;" onclick="showImageGallery()">
                     ← Back to Gallery
                 </div>
             `;
@@ -599,6 +608,7 @@ function showFullPost(postId) {
         function closeModal() {
             document.getElementById('postModal').style.display = 'none';
             document.body.style.overflow = 'auto';
+            currentPost = null; // Clear current post
         }
 
         // Close modal when clicking outside
