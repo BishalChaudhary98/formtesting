@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Post</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-container {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .success-message {
+            background: #10b981;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Add New Post</h1>
+            <p>Share your cleaning tips with the world</p>
+        </div>
+
+        <div class="form-container">
+            <div class="success-message" id="successMessage">
+                🎉 Post created successfully! Redirecting...
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                ❌ Please fill in all fields.
+            </div>
+
+            <form id="postForm">
+                <div class="form-group">
+                    <label for="title">Post Title *</label>
+                    <input type="text" id="title" required placeholder="Enter your post title">
+                </div>
+
+                <div class="form-group">
+                    <label for="excerpt">Short Description *</label>
+                    <textarea id="excerpt" required placeholder="Brief description (2-3 sentences)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Full Content *</label>
+                    <textarea id="content" required placeholder="Write your full article here..." style="min-height: 200px;"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="image">Image URL (optional)</label>
+                    <input type="url" id="image" placeholder="https://example.com/image.jpg">
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">📝 Publish Post</button>
+                    <a href="blog.html" class="btn btn-secondary">← Back to Blog</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class PostForm {
+            constructor() {
+                this.form = document.getElementById('postForm');
+                this.successMessage = document.getElementById('successMessage');
+                this.errorMessage = document.getElementById('errorMessage');
+                
+                this.form.addEventListener('submit', this.handleSubmit.bind(this));
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const title = document.getElementById('title').value.trim();
+                const excerpt = document.getElementById('excerpt').value.trim();
+                const content = document.getElementById('content').value.trim();
+                const image = document.getElementById('image').value.trim();
+
+                // Validate
+                if (!title || !excerpt || !content) {
+                    this.showError('Please fill in all required fields.');
+                    return;
+                }
+
+                // Create post object
+                const post = {
+                    id: Date.now(),
+                    title: title,
+                    excerpt: excerpt,
+                    content: content,
+                    image: image,
+                    date: new Date().toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    })
+                };
+
+                // Save post
+                this.savePost(post);
+            }
+
+            savePost(post) {
+                try {
+                    // Get existing posts
+                    const existingPosts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+                    
+                    // Add new post to beginning
+                    existingPosts.unshift(post);
+                    
+                    // Save back to localStorage
+                    localStorage.setItem('blogPosts', JSON.stringify(existingPosts));
+                    
+                    // Show success and redirect
+                                        this.showSuccess();
+                    
+                    setTimeout(() => {
+                        window.location.href = 'blog.html';
+                    }, 2000);
+                    
+                } catch (error) {
+                    this.showError('Error saving post. Please try again.');
+                    console.error('Error:', error);
+                }
+            }
+
+            showSuccess() {
+                this.errorMessage.style.display = 'none';
+                this.successMessage.style.display = 'block';
+                this.form.style.opacity = '0.5';
+                this.form.style.pointerEvents = 'none';
+            }
+
+            showError(message) {
+                this.successMessage.style.display = 'none';
+                this.errorMessage.textContent = `❌ ${message}`;
+                this.errorMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    this.errorMessage.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', function() {
+            new PostForm();
+        });
+    </script>
+</body>
+</html>
